@@ -2,14 +2,59 @@
 scalar Date @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\Date")
 
 "A datetime string with format `Y-m-d H:i:s`, e.g. `2018-05-23 13:43:32`."
-scalar DateTime @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\DateTime")
+scalar DateTime
+    @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\DateTime")
 
 "A datetime and timezone string in ISO 8601 format `Y-m-dTH:i:sO`, e.g. `2020-04-20T13:53:12+02:00`."
-scalar DateTimeTz @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\DateTimeTz")
+scalar DateTimeTz
+    @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\DateTimeTz")
 
 type Query {
     users: [User!]! @paginate(defaultCount: 10)
     user(id: ID @eq): User @find
+    books: [Book] @all
+    book(id: ID @eq): Book @find
+    booksFeatured(featured: Boolean! @eq): [Book] @all
+    search(search: String!): [Book]
+
+    categories: [Category] @all
+    category(id: ID @eq): Category @find
+}
+
+type Mutation {
+    createCategory(
+        name: String @rules(apply: ["required", "unique:categories,name"])
+    ): Category @create
+
+    updateCategory(
+        id: ID @rules(apply: ["required"])
+        name: String @rules(apply: ["required", "unique:categories,name"])
+    ): Category @update
+
+    deleteCategory(id: ID! @rules(apply: ["required"])): Category @delete
+
+    createBook(
+        title: String! @rules(apply: ["required"])
+        author: String! @rules(apply: ["required"])
+        image: String
+        link: String
+        description: String
+        featured: Boolean
+        category: Int!
+    ): Book @create
+
+    updateBook(
+        id: ID @rules(apply: ["required"])
+        title: String! @rules(apply: ["required"])
+        author: String! @rules(apply: ["required"])
+        image: String
+        link: String
+        description: String
+        featured: Boolean
+        category: Int!
+    ): Book @update
+
+    deleteBook(id: ID! @rules(apply: ["required"])): Book @delete
 }
 
 type User {
@@ -18,4 +63,21 @@ type User {
     email: String!
     created_at: DateTime!
     updated_at: DateTime!
+}
+
+type Book {
+    id: ID!
+    title: String!
+    author: String!
+    image: String
+    link: String
+    description: String
+    featured: Boolean
+    category: Category! @belongsTo
+}
+
+type Category {
+    id: ID!
+    name: String!
+    books: [Book] @hasMany
 }
